@@ -213,13 +213,13 @@ for epoch in range(epochs):
         print(f"epoch: {epoch}, Loss: {loss:.5f}, Accuracy: {acc:.2f}, Test Loss: {test_loss:.5f}, Test Accuracy: {test_acc:.2f}")
 
 
-plt.figure(figsize=(12, 6))
-plt.subplot(1, 2, 1)
-plt.title("Train")
-plot_decision_boundary(model_1, X_train, y_train)
-plt.subplot(1, 2, 2)
-plt.title("Test")
-plot_decision_boundary(model_1, X_test, y_test)
+#plt.figure(figsize=(12, 6))
+#plt.subplot(1, 2, 1)
+#plt.title("Train")
+#lot_decision_boundary(model_1, X_train, y_train)
+#plt.subplot(1, 2, 2)
+#plt.title("Test")
+#plot_decision_boundary(model_1, X_test, y_test)
 #plt.show()
 
 
@@ -241,10 +241,55 @@ X_train_regression, y_train_regression = X_regression[:train_split], y_regressio
 X_test_regression, y_test_regression = X_regression[train_split:], y_regression[train_split:]
 print(len(X_train_regression), len(y_train_regression), len(X_test_regression), len(y_test_regression))
 
-plot_predictions(train_data=X_train_regression,
-                 train_labels=y_train_regression,
-                 test_data=X_test_regression,
-                 test_labels=y_test_regression,
-                 );
+#plot_predictions(train_data=X_train_regression,
+#                train_labels=y_train_regression,
+#                 test_data=X_test_regression,
+#                 test_labels=y_test_regression,
+#                 );
+#plt.show()
+
+model_2 = nn.Sequential(nn.Linear(1, 10), nn.Linear(10, 10), nn.Linear(10,1) ).to(device)
+print(model_2)
+
+#Loss and Optimizer
+
+loss_fn = nn.L1Loss()
+optimizer = torch.optim.SGD(model_2.parameters(), lr=0.1)
+
+
+#Train the model
+torch.manual_seed(42)
+
+epochs = 1000
+X_train_regression, y_train_regression = X_train_regression.to(device), y_train_regression.to(device)
+X_test_regression, y_test_regression = X_test_regression.to(device), y_test_regression.to(device)
+
+for epoch in range(epochs):
+    #pass forward
+    y_pred = model_2(X_train_regression)
+    loss = loss_fn(y_pred, y_train_regression)
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+    model_2.eval()
+    with torch.inference_mode():
+        test_pred = model_2(X_test_regression)
+
+        test_loss = loss_fn(test_pred, y_test_regression)
+
+    if epoch % 100 == 0:
+        print(f"Epoch: {epoch}, Loss: {loss:.5f}, Accuracy: {test_loss:.5f}")
+
+model_2.eval()
+with torch.inference_mode():
+    y_preds = model_2(X_test_regression)
+
+plot_predictions(train_data=X_train_regression.cpu(),
+                 train_labels=y_train_regression.cpu(),
+                 test_data=X_test_regression.cpu(),
+                 test_labels=y_test_regression.cpu(),
+                 predictions=y_preds.cpu())
 plt.show()
+
+
 
